@@ -11,9 +11,7 @@ export function defaultPortuguesState() {
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const LITERACY_ITEMS = [
   // Fácil
-  { emoji: "🍞", word: "PAO", difficulty: "facil" },
   { emoji: "🥛", word: "LEITE", difficulty: "facil" },
-  { emoji: "🍎", word: "MACA", difficulty: "facil" },
   { emoji: "🍇", word: "UVA", difficulty: "facil" },
   { emoji: "🍚", word: "ARROZ", difficulty: "facil" },
   { emoji: "🍯", word: "MEL", difficulty: "facil" },
@@ -28,7 +26,6 @@ const LITERACY_ITEMS = [
   { emoji: "🐱", word: "GATO", difficulty: "facil" },
   { emoji: "🐭", word: "RATO", difficulty: "facil" },
   { emoji: "🐄", word: "VACA", difficulty: "facil" },
-  { emoji: "🐶", word: "CAO", difficulty: "facil" },
   { emoji: "🐸", word: "SAPO", difficulty: "facil" },
   { emoji: "🐻", word: "URSO", difficulty: "facil" },
   { emoji: "🐟", word: "PEIXE", difficulty: "facil" },
@@ -121,7 +118,6 @@ const LITERACY_ITEMS = [
   { emoji: "🇦🇷", word: "ARGENTINA", difficulty: "dificil" },
   { emoji: "🇩🇪", word: "ALEMANHA", difficulty: "dificil" },
   { emoji: "🇦🇺", word: "AUSTRALIA", difficulty: "dificil" },
-  { emoji: "🇺🇸", word: "ESTADOSUNIDOS", difficulty: "dificil" },
 ];
 
 const LITERACY_STAGES = [
