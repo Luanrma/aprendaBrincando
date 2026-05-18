@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1f4fff" />
+    <title>Aprenda Brincando</title>
+    <link rel="stylesheet" href="./css/main.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🎮</div>
+        <div>
+          <div class="brand-title">Aprenda Brincando</div>
+          <div class="brand-subtitle">Alfabetização + Matemática (Web)</div>
+        </div>
+      </div>
+
+      <div class="hud">
+        <div class="hud-item">
+          <div class="hud-label">Pontos</div>
+          <div class="hud-value" id="points">0</div>
+        </div>
+        <div class="hud-item">
+          <div class="hud-label">Nível</div>
+          <div class="hud-value" id="level">1</div>
+          <div class="xp">
+            <div class="xp-bar" aria-hidden="true">
+              <div class="xp-fill" id="xpFill"></div>
+            </div>
+            <div class="xp-text" id="xpText">0 / 0 XP</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="btnHome" type="button" title="Voltar ao início">
+          Início
+        </button>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- HOME -->
+      <section class="screen" id="screen-home" data-screen="home">
+        <div class="card">
+          <h1>Bem-vindo(a)!</h1>
+          <p>Escolha uma atividade para jogar. Cada resposta correta dá pontos e você sobe de nível.</p>
+
+          <div class="grid-2">
+            <button class="btn btn-primary btn-big" id="btnStartLiteracy" type="button">
+              📚 Alfabetização
+              <span class="btn-hint" id="literacyHint">trilha progressiva (estilo Duolingo)</span>
+            </button>
+            <button class="btn btn-primary btn-big" id="btnStartMath" type="button">
+              ➕ Matemática
+              <span class="btn-hint">trilha progressiva</span>
+            </button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid-2">
+            <div class="small-card">
+              <div class="small-title">Melhor pontuação</div>
+              <div class="small-value" id="bestScore">0</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Dica</div>
+              <div class="small-text">
+                Use em celular/tablet. Se errar, tente de novo — aprender é praticar!
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="small-card">
+            <div class="small-title">Trilha de Alfabetização</div>
+            <div class="path-group-title">1) Primeira letra</div>
+            <div id="literacyPath" class="path" aria-label="Trilha: primeira letra"></div>
+
+            <div class="path-group-title">2) Escrever a palavra</div>
+            <div id="spellingPath" class="path" aria-label="Trilha: escrever a palavra"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="small-card">
+            <div class="small-title">Trilha de Matemática</div>
+            <div id="mathTabs" class="tabs" aria-label="Seleção de trilha de matemática"></div>
+            <div id="mathPath" class="path path-grid" aria-label="Trilha de matemática"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LITERACY -->
+      <section class="screen hidden" id="screen-literacy" data-screen="literacy">
+        <div class="card">
+          <div class="screen-title">
+            <h2>📚 Alfabetização</h2>
+            <button class="btn btn-ghost" id="btnLiteracyNew" type="button">Reiniciar sessão</button>
+          </div>
+
+          <div class="stagebar" aria-label="Status da sessão">
+            <div>
+              <div class="stage-title" id="litStageTitle">Sessão</div>
+              <div class="stage-sub" id="litStageProgress">Questão 1/10</div>
+            </div>
+            <div class="stage-right">
+              <label class="stage-voice">
+                <span class="control-label">Voz</span>
+                <select class="control-input" id="ttsVoice">
+                  <option value="">Automática (pt-BR)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="prompt">
+            <div class="prompt-emoji" id="litEmoji" aria-hidden="true">🍎</div>
+            <div class="prompt-text" id="litQuestion">Qual é a primeira letra?</div>
+            <button class="btn btn-primary" id="btnLitSpeak" type="button" title="Ouvir a palavra">
+              🔊 Ouvir
+            </button>
+          </div>
+
+          <div class="choices" id="litChoices" role="group" aria-label="Alternativas"></div>
+          <div class="feedback" id="litFeedback" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- LITERACY RESULT -->
+      <section class="screen hidden" id="screen-literacy-result" data-screen="literacy-result">
+        <div class="card">
+          <h2 id="litResultTitle">Sessão concluída!</h2>
+          <p class="muted" id="litResultMessage">Sua pontuação da sessão aparecerá aqui.</p>
+
+          <div class="result-grid">
+            <div class="small-card">
+              <div class="small-title">Acertos</div>
+              <div class="small-value" id="litResultCorrect">0/0</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Desempenho</div>
+              <div class="small-value" id="litResultAccuracy">0%</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Pontos na sessão</div>
+              <div class="small-value" id="litResultPoints">0</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="grid-2">
+            <button class="btn btn-primary btn-big" id="btnLitResultPrimary" type="button">
+              Continuar
+              <span class="btn-hint" id="litResultPrimaryHint">próxima sessão</span>
+            </button>
+            <button class="btn btn-ghost btn-big" id="btnLitResultHome" type="button">
+              Voltar ao início
+              <span class="btn-hint">ver a trilha</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPELLING -->
+      <section class="screen hidden" id="screen-spell" data-screen="spell">
+        <div class="card">
+          <div class="screen-title">
+            <h2>✍️ Escrever a palavra</h2>
+            <button class="btn btn-ghost" id="btnSpellRestart" type="button">Reiniciar sessão</button>
+          </div>
+
+          <div class="stagebar" aria-label="Status da sessão">
+            <div>
+              <div class="stage-title" id="spellStageTitle">Sessão</div>
+              <div class="stage-sub" id="spellStageProgress">Questão 1/10</div>
+            </div>
+            <div class="stage-right">
+              <label class="stage-voice">
+                <span class="control-label">Voz</span>
+                <select class="control-input" id="ttsVoiceSpell">
+                  <option value="">Automática (pt-BR)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="prompt">
+            <div class="prompt-emoji" id="spellEmoji" aria-hidden="true">👂</div>
+            <div class="prompt-text" id="spellQuestion">Ouça e escreva a palavra</div>
+            <button class="btn btn-primary" id="btnSpellSpeak" type="button" title="Ouvir a palavra">
+              🔊 Ouvir
+            </button>
+          </div>
+
+          <div class="spell-word" id="spellWord" aria-label="Palavra"></div>
+          <div class="keyboard" id="spellKeyboard" aria-label="Teclado"></div>
+          <div class="feedback" id="spellFeedback" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- SPELLING RESULT -->
+      <section class="screen hidden" id="screen-spell-result" data-screen="spell-result">
+        <div class="card">
+          <h2 id="spellResultTitle">Sessão concluída!</h2>
+          <p class="muted" id="spellResultMessage">Seu resultado aparecerá aqui.</p>
+
+          <div class="result-grid">
+            <div class="small-card">
+              <div class="small-title">Acertos</div>
+              <div class="small-value" id="spellResultCorrect">0/0</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Desempenho</div>
+              <div class="small-value" id="spellResultAccuracy">0%</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Pontos na sessão</div>
+              <div class="small-value" id="spellResultPoints">0</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="grid-2">
+            <button class="btn btn-primary btn-big" id="btnSpellResultPrimary" type="button">
+              Continuar
+              <span class="btn-hint" id="spellResultPrimaryHint">próxima sessão</span>
+            </button>
+            <button class="btn btn-ghost btn-big" id="btnSpellResultHome" type="button">
+              Voltar ao início
+              <span class="btn-hint">ver a trilha</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MATH -->
+      <section class="screen hidden" id="screen-math" data-screen="math">
+        <div class="card">
+          <div class="screen-title">
+            <h2>➕ Matemática</h2>
+            <button class="btn btn-ghost" id="btnMathNew" type="button">Reiniciar sessão</button>
+          </div>
+
+          <div class="stagebar" aria-label="Status da sessão">
+            <div>
+              <div class="stage-title" id="mathStageTitle">Sessão</div>
+              <div class="stage-sub" id="mathStageProgress">Questão 1/10</div>
+            </div>
+          </div>
+
+          <div class="prompt">
+            <div class="prompt-emoji" id="mathEmoji" aria-hidden="true">🧠</div>
+            <div class="prompt-text" id="mathQuestion">Quanto é 1 + 1?</div>
+          </div>
+
+          <div class="choices" id="mathChoices" role="group" aria-label="Alternativas"></div>
+          <div class="feedback" id="mathFeedback" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- MATH RESULT -->
+      <section class="screen hidden" id="screen-math-result" data-screen="math-result">
+        <div class="card">
+          <h2 id="mathResultTitle">Sessão concluída!</h2>
+          <p class="muted" id="mathResultMessage">Seu resultado aparecerá aqui.</p>
+
+          <div class="result-grid">
+            <div class="small-card">
+              <div class="small-title">Acertos</div>
+              <div class="small-value" id="mathResultCorrect">0/0</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Desempenho</div>
+              <div class="small-value" id="mathResultAccuracy">0%</div>
+            </div>
+            <div class="small-card">
+              <div class="small-title">Pontos na sessão</div>
+              <div class="small-value" id="mathResultPoints">0</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="grid-2">
+            <button class="btn btn-primary btn-big" id="btnMathResultPrimary" type="button">
+              Continuar
+              <span class="btn-hint" id="mathResultPrimaryHint">próxima sessão</span>
+            </button>
+            <button class="btn btn-ghost btn-big" id="btnMathResultHome" type="button">
+              Voltar ao início
+              <span class="btn-hint">ver a trilha</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Feito para publicação no GitHub Pages • HTML/CSS/JS</span>
+      <span class="sep">•</span>
+      <button class="btn btn-link" id="btnResetProgress" type="button">Zerar progresso</button>
+    </footer>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

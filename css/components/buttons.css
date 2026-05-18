@@ -1,0 +1,54 @@
+.btn{
+  appearance:none;
+  border: none;
+  cursor:pointer;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 800;
+  color: var(--text);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  transition: transform .06s ease, background .12s ease, border-color .12s ease;
+}
+.btn:active{ transform: translateY(1px); }
+.btn:focus{ outline: 2px solid rgba(31,79,255,.6); outline-offset: 2px; }
+
+.btn-primary{
+  background: linear-gradient(180deg, rgba(31,79,255,.95), rgba(31,79,255,.65));
+  border-color: rgba(31,79,255,.55);
+}
+.btn-ghost{ background: rgba(255,255,255,.06); }
+.btn-link{
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn-big{
+  text-align:left;
+  padding: 14px 14px;
+  font-size: 18px;
+}
+.btn-hint{
+  display:block;
+  font-weight: 650;
+  font-size: 13px;
+  margin-top: 4px;
+  color: rgba(234,240,255,.85);
+}
+
+.choice-btn{
+  font-size: 18px;
+  padding: 14px 12px;
+  background: rgba(255,255,255,.07);
+}
+.choice-btn.ok{
+  border-color: rgba(25,195,125,.65);
+  background: rgba(25,195,125,.18);
+}
+.choice-btn.bad{
+  border-color: rgba(255,77,77,.65);
+  background: rgba(255,77,77,.16);
+}
