@@ -11,6 +11,8 @@ export function defaultPortuguesState() {
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const LITERACY_ITEMS = [
   // Fácil
+  { emoji: "🍞", word: "PÃO", difficulty: "facil" },
+  { emoji: "🍎", word: "MAÇÃ", difficulty: "facil" },
   { emoji: "🥛", word: "LEITE", difficulty: "facil" },
   { emoji: "🍇", word: "UVA", difficulty: "facil" },
   { emoji: "🍚", word: "ARROZ", difficulty: "facil" },
@@ -26,6 +28,7 @@ const LITERACY_ITEMS = [
   { emoji: "🐱", word: "GATO", difficulty: "facil" },
   { emoji: "🐭", word: "RATO", difficulty: "facil" },
   { emoji: "🐄", word: "VACA", difficulty: "facil" },
+  { emoji: "🐶", word: "CÃO", difficulty: "facil" },
   { emoji: "🐸", word: "SAPO", difficulty: "facil" },
   { emoji: "🐻", word: "URSO", difficulty: "facil" },
   { emoji: "🐟", word: "PEIXE", difficulty: "facil" },
@@ -35,19 +38,19 @@ const LITERACY_ITEMS = [
   { emoji: "🏠", word: "CASA", difficulty: "facil" },
   { emoji: "🚗", word: "CARRO", difficulty: "facil" },
   { emoji: "📚", word: "LIVRO", difficulty: "facil" },
-  { emoji: "✏️", word: "LAPIS", difficulty: "facil" },
+  { emoji: "✏️", word: "LÁPIS", difficulty: "facil" },
   { emoji: "🛏️", word: "CAMA", difficulty: "facil" },
   { emoji: "🥤", word: "COPO", difficulty: "facil" },
-  { emoji: "🧢", word: "BONE", difficulty: "facil" },
+  { emoji: "🧢", word: "BONÉ", difficulty: "facil" },
   { emoji: "🚪", word: "PORTA", difficulty: "facil" },
   { emoji: "🗝️", word: "CHAVE", difficulty: "facil" },
 
   // Países (bandeiras)
   { emoji: "🇨🇱", word: "CHILE", difficulty: "facil" },
   { emoji: "🇨🇳", word: "CHINA", difficulty: "facil" },
-  { emoji: "🇯🇵", word: "JAPAO", difficulty: "facil" },
+  { emoji: "🇯🇵", word: "JAPÃO", difficulty: "facil" },
   { emoji: "🇵🇪", word: "PERU", difficulty: "facil" },
-  { emoji: "🇮🇳", word: "INDIA", difficulty: "facil" },
+  { emoji: "🇮🇳", word: "ÍNDIA", difficulty: "facil" },
 
   // Médio
   { emoji: "🍌", word: "BANANA", difficulty: "medio" },
@@ -59,18 +62,18 @@ const LITERACY_ITEMS = [
   { emoji: "🍅", word: "TOMATE", difficulty: "medio" },
   { emoji: "🥛", word: "IOGURTE", difficulty: "medio" },
   { emoji: "🥑", word: "ABACATE", difficulty: "medio" },
-  { emoji: "🍋", word: "LIMAO", difficulty: "medio" },
+  { emoji: "🍋", word: "LIMÃO", difficulty: "medio" },
   { emoji: "🐰", word: "COELHO", difficulty: "medio" },
   { emoji: "🐴", word: "CAVALO", difficulty: "medio" },
   { emoji: "🐔", word: "GALINHA", difficulty: "medio" },
   { emoji: "🐒", word: "MACACO", difficulty: "medio" },
   { emoji: "🦒", word: "GIRAFA", difficulty: "medio" },
-  { emoji: "🦈", word: "TUBARAO", difficulty: "medio" },
+  { emoji: "🦈", word: "TUBARÃO", difficulty: "medio" },
   { emoji: "🦊", word: "RAPOSA", difficulty: "medio" },
   { emoji: "🐝", word: "ABELHA", difficulty: "medio" },
   { emoji: "🦉", word: "CORUJA", difficulty: "medio" },
-  { emoji: "🚌", word: "ONIBUS", difficulty: "medio" },
-  { emoji: "⌚", word: "RELOGIO", difficulty: "medio" },
+  { emoji: "🚌", word: "ÔNIBUS", difficulty: "medio" },
+  { emoji: "⌚", word: "RELÓGIO", difficulty: "medio" },
   { emoji: "📱", word: "CELULAR", difficulty: "medio" },
   { emoji: "🪑", word: "CADEIRA", difficulty: "medio" },
   { emoji: "📓", word: "CADERNO", difficulty: "medio" },
@@ -81,17 +84,17 @@ const LITERACY_ITEMS = [
 
   // Países (bandeiras)
   { emoji: "🇧🇷", word: "BRASIL", difficulty: "medio" },
-  { emoji: "🇲🇽", word: "MEXICO", difficulty: "medio" },
-  { emoji: "🇨🇦", word: "CANADA", difficulty: "medio" },
-  { emoji: "🇮🇹", word: "ITALIA", difficulty: "medio" },
-  { emoji: "🇫🇷", word: "FRANCA", difficulty: "medio" },
+  { emoji: "🇲🇽", word: "MÉXICO", difficulty: "medio" },
+  { emoji: "🇨🇦", word: "CANADÁ", difficulty: "medio" },
+  { emoji: "🇮🇹", word: "ITÁLIA", difficulty: "medio" },
+  { emoji: "🇫🇷", word: "FRANÇA", difficulty: "medio" },
   { emoji: "🇪🇸", word: "ESPANHA", difficulty: "medio" },
 
   // Difícil
   { emoji: "🍪", word: "BISCOITO", difficulty: "dificil" },
   { emoji: "🍫", word: "CHOCOLATE", difficulty: "dificil" },
   { emoji: "🍉", word: "MELANCIA", difficulty: "dificil" },
-  { emoji: "🍝", word: "MACARRAO", difficulty: "dificil" },
+  { emoji: "🍝", word: "MACARRÃO", difficulty: "dificil" },
   { emoji: "🥜", word: "AMENDOIM", difficulty: "dificil" },
   { emoji: "🍔", word: "HAMBURGUER", difficulty: "dificil" },
   { emoji: "🥞", word: "PANQUECA", difficulty: "dificil" },
@@ -107,17 +110,17 @@ const LITERACY_ITEMS = [
   { emoji: "🧹", word: "VASSOURA", difficulty: "dificil" },
   { emoji: "🧯", word: "EXTINTOR", difficulty: "dificil" },
   { emoji: "💻", word: "COMPUTADOR", difficulty: "dificil" },
-  { emoji: "📺", word: "TELEVISAO", difficulty: "dificil" },
-  { emoji: "🧩", word: "QUEBRACABECA", difficulty: "dificil" },
+  { emoji: "📺", word: "TELEVISÃO", difficulty: "dificil" },
+  { emoji: "🧩", word: "QUEBRA-CABEÇA", difficulty: "dificil" },
   { emoji: "🩹", word: "BORRACHA", difficulty: "dificil" },
-  { emoji: "☂️", word: "GUARDACHUVA", difficulty: "dificil" },
+  { emoji: "☂️", word: "GUARDA-CHUVA", difficulty: "dificil" },
   { emoji: "🧊", word: "GELADEIRA", difficulty: "dificil" },
 
   // Países (bandeiras)
   { emoji: "🇵🇹", word: "PORTUGAL", difficulty: "dificil" },
   { emoji: "🇦🇷", word: "ARGENTINA", difficulty: "dificil" },
   { emoji: "🇩🇪", word: "ALEMANHA", difficulty: "dificil" },
-  { emoji: "🇦🇺", word: "AUSTRALIA", difficulty: "dificil" },
+  { emoji: "🇦🇺", word: "AUSTRÁLIA", difficulty: "dificil" },
 ];
 
 const LITERACY_STAGES = [
@@ -241,28 +244,37 @@ export function initPortugues(ctx) {
     const stage = LITERACY_STAGES[literacyRun.stageIndex];
     const total = literacyRun.roundsTotal;
     const acc = total ? literacyRun.correct / total : 0;
-    $("litResultCorrect").textContent = `${literacyRun.correct}/${total}`;
-    $("litResultAccuracy").textContent = `${Math.round(acc * 100)}%`;
-    $("litResultPoints").textContent = String(literacyRun.points);
+    const setText = (id, value) => {
+      const el = $(id);
+      if (el) el.textContent = value;
+      return el;
+    };
 
+    setText("litResultCorrect", `${literacyRun.correct}/${total}`);
+    setText("litResultAccuracy", `${Math.round(acc * 100)}%`);
+    setText("litResultPoints", String(literacyRun.points));
+
+    const titleEl = $("litResultTitle");
+    const msgEl = $("litResultMessage");
     const primaryBtn = $("btnLitResultPrimary");
     const primaryHint = $("litResultPrimaryHint");
+    if (!titleEl || !msgEl || !primaryBtn || !primaryHint) return;
 
     if (finishedAll) {
-      $("litResultTitle").textContent = "Trilha concluída! 🎉";
-      $("litResultMessage").textContent = "Agora vem um novo desafio: ouvir e ESCREVER a palavra escolhendo as letras!";
+      titleEl.textContent = "Trilha concluída! 🎉";
+      msgEl.textContent = "Agora vem um novo desafio: ouvir e ESCREVER a palavra escolhendo as letras!";
       primaryBtn.textContent = "Começar escrita";
       primaryHint.textContent = "novo desafio";
       primaryBtn.dataset.action = "spell";
     } else if (passed) {
-      $("litResultTitle").textContent = "Muito bem! ✅";
-      $("litResultMessage").textContent = `Você passou na ${stage.title}. Próxima sessão liberada!`;
+      titleEl.textContent = "Muito bem! ✅";
+      msgEl.textContent = `Você passou na ${stage.title}. Próxima sessão liberada!`;
       primaryBtn.textContent = "Continuar";
       primaryHint.textContent = "próxima sessão";
       primaryBtn.dataset.action = "next";
     } else {
-      $("litResultTitle").textContent = "Vamos tentar de novo 💪";
-      $("litResultMessage").textContent = `Você precisa de pelo menos ${Math.round(stage.pass * 100)}% de acertos para passar.`;
+      titleEl.textContent = "Vamos tentar de novo 💪";
+      msgEl.textContent = `Você precisa de pelo menos ${Math.round(stage.pass * 100)}% de acertos para passar.`;
       primaryBtn.textContent = "Repetir sessão";
       primaryHint.textContent = "treinar mais";
       primaryBtn.dataset.action = "retry";

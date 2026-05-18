@@ -52,6 +52,18 @@ function getNumberRangeForDifficulty(stageIndex) {
   return { min: 1000, max: 9999 };
 }
 
+function getDivisionRanges(stageIndex) {
+  if (stageIndex === 0) return { aMin: 0, aMax: 99, bMin: 1, bMax: 10, allowEqual: true };
+  if (stageIndex === 1) return { aMin: 100, aMax: 999, bMin: 1, bMax: 100, allowEqual: true };
+  return { aMin: 1000, aMax: 9999, bMin: 1, bMax: 1000, allowEqual: false };
+}
+
+function getMultiplicationRanges(stageIndex) {
+  if (stageIndex === 0) return { aMin: 0, aMax: 99, bMin: 1, bMax: 10 };
+  if (stageIndex === 1) return { aMin: 1, aMax: 999, bMin: 0, bMax: 999 };
+  return { aMin: 100, aMax: 9999, bMin: 1, bMax: 9999 };
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -100,45 +112,57 @@ export function initMatematica(ctx) {
 
   function makeMathQuestionForStage(stageIndex) {
     const track = getMathTrack(mathRun.trackKey);
-    const range = getNumberRangeForDifficulty(stageIndex);
-
     const ops = track.key === "geral" ? STAGES_META[stageIndex].titleSuffix.includes("Difícil") ? track.ops : track.ops.filter((o) => o !== "÷") : track.ops;
     const op = pickOne(ops);
 
     let a, b, text, answer;
 
     if (op === "×") {
-      a = randInt(range.min, range.max);
-      b = randInt(range.min, range.max);
+      const r = getMultiplicationRanges(stageIndex);
+      a = randInt(r.aMin, r.aMax);
+      b = randInt(r.bMin, r.bMax);
       answer = a * b;
       text = `Quanto é ${a} × ${b}?`;
     } else if (op === "÷") {
-      let tries = 0;
-      while (tries < 60) {
-        b = randInt(Math.max(1, range.min), range.max);
-        const qMin = Math.ceil(range.min / b);
-        const qMax = Math.floor(range.max / b);
-        if (qMax >= Math.max(1, qMin)) {
-          const q = randInt(Math.max(1, qMin), Math.max(1, qMax));
-          a = b * q;
-          answer = q;
-          break;
+      // Regra: B <= A.
+      // Fácil: A 0..99; B 1..10 ou B=A (mas nunca 0)
+      // Médio: A 100..999; B 1..100 ou B=A
+      // Difícil: A 1000..9999; B 1..1000 e nunca repete A
+      const r = getDivisionRanges(stageIndex);
+
+      const pickDivisor = (n, maxB) => {
+        if (n === 0) return randInt(1, Math.min(maxB, 10));
+        const limit = Math.min(maxB, n);
+        const candidates = [];
+        for (let d = 1; d <= limit; d++) {
+          if (d === 0) continue;
+          if (n % d === 0) candidates.push(d);
         }
-        tries += 1;
-      }
-      if (typeof a !== "number" || typeof b !== "number") {
-        b = randInt(1, 9);
-        answer = randInt(1, 9);
-        a = b * answer;
-      }
+        return candidates.length ? pickOne(candidates) : 1;
+      };
+
+      const canUseEqual = (A) => r.allowEqual && A > 0; // evita 0 ÷ 0
+      const wantEqual = (A) => canUseEqual(A) && Math.random() < 0.18;
+
+      a = randInt(r.aMin, r.aMax);
+      b = wantEqual(a) ? a : pickDivisor(a, r.bMax);
+
+      if (!r.allowEqual && b === a) b = Math.max(r.bMin, Math.min(r.bMax, a - 1));
+      if (b < r.bMin) b = r.bMin;
+      if (b > a && a > 0) b = Math.min(a, r.bMax);
+
+      answer = a / b;
       text = `Quanto é ${a} ÷ ${b}?`;
     } else if (op === "−") {
+      const range = getNumberRangeForDifficulty(stageIndex);
       a = randInt(range.min, range.max);
       b = randInt(range.min, range.max);
       if (b > a) [a, b] = [b, a];
+      if (a === b) b = Math.max(range.min, b - 1); // evita resultado 0 (mantém positivo)
       answer = a - b;
       text = `Quanto é ${a} − ${b}?`;
     } else {
+      const range = getNumberRangeForDifficulty(stageIndex);
       a = randInt(range.min, range.max);
       b = randInt(range.min, range.max);
       answer = a + b;
@@ -191,18 +215,28 @@ export function initMatematica(ctx) {
     const total = mathRun.roundsTotal;
     const acc = total ? mathRun.correct / total : 0;
 
-    $("mathResultCorrect").textContent = `${mathRun.correct}/${total}`;
-    $("mathResultAccuracy").textContent = `${Math.round(acc * 100)}%`;
-    $("mathResultPoints").textContent = String(mathRun.points);
+    const setText = (id, value) => {
+      const el = $(id);
+      if (el) el.textContent = value;
+      return el;
+    };
+
+    setText("mathResultCorrect", `${mathRun.correct}/${total}`);
+    setText("mathResultAccuracy", `${Math.round(acc * 100)}%`);
+    setText("mathResultPoints", String(mathRun.points));
 
     const title = $("mathResultTitle");
     const msg = $("mathResultMessage");
     const primaryBtn = $("btnMathResultPrimary");
     const primaryHint = $("mathResultPrimaryHint");
 
-    if (finishedAll) return renderMathFinishedAll(track, { title, msg, primaryBtn, primaryHint });
-    if (passed) return renderMathPassed({ title, msg, primaryBtn, primaryHint });
-    return renderMathFailed({ title, msg, primaryBtn, primaryHint });
+    // Evita quebrar caso o HTML ainda não tenha carregado/tenha sido alterado
+    if (!title || !msg || !primaryBtn || !primaryHint) return;
+
+    const ui = { title, msg, primaryBtn, primaryHint };
+    if (finishedAll) renderMathFinishedAll(track, ui);
+    else if (passed) renderMathPassed(ui);
+    else renderMathFailed(ui);
 
     showScreen("mathResult");
   }
