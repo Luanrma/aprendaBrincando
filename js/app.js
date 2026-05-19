@@ -55,6 +55,7 @@ function loadState() {
       },
       literacy: parsed?.literacy || defaults.literacy,
       spell: parsed?.spell || defaults.spell,
+      phrase: parsed?.phrase || defaults.phrase,
       math: migratedMath || parsed?.math || defaults.math,
     };
   } catch {
@@ -71,6 +72,7 @@ function saveState() {
       settings: state.settings,
       literacy: state.literacy,
       spell: state.spell,
+      phrase: state.phrase,
       math: state.math,
     })
   );
@@ -307,4 +309,3 @@ if (tts.supported) {
     populateVoiceSelect("ttsVoiceSpell");
   });
 }
-

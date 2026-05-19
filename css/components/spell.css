@@ -25,6 +25,18 @@
   background: rgba(31,79,255,.16);
   border-color: rgba(31,79,255,.28);
 }
+.spell-box.space{
+  width: 18px;
+  background: transparent;
+  border-color: transparent;
+}
+.spell-box.hyphen{
+  width: 18px;
+  background: transparent;
+  border-color: transparent;
+  color: rgba(234,240,255,.75);
+  font-weight: 950;
+}
 
 .keyboard{
   margin-top: 12px;
@@ -48,4 +60,3 @@
   border-color: rgba(25,195,125,.45);
   background: rgba(25,195,125,.16);
 }
-

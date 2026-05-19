@@ -229,11 +229,12 @@ export function initMatematica(ctx) {
     const msg = $("mathResultMessage");
     const primaryBtn = $("btnMathResultPrimary");
     const primaryHint = $("mathResultPrimaryHint");
+    const primaryLabel = $("mathResultPrimaryLabel");
 
     // Evita quebrar caso o HTML ainda não tenha carregado/tenha sido alterado
-    if (!title || !msg || !primaryBtn || !primaryHint) return;
+    if (!title || !msg || !primaryBtn || !primaryHint || !primaryLabel) return;
 
-    const ui = { title, msg, primaryBtn, primaryHint };
+    const ui = { title, msg, primaryBtn, primaryHint, primaryLabel };
     if (finishedAll) renderMathFinishedAll(track, ui);
     else if (passed) renderMathPassed(ui);
     else renderMathFailed(ui);
@@ -242,7 +243,7 @@ export function initMatematica(ctx) {
   }
 
   function renderMathFinishedAll(track, ui) {
-    const { title, msg, primaryBtn, primaryHint } = ui;
+    const { title, msg, primaryBtn, primaryHint, primaryLabel } = ui;
     title.textContent = "Trilha concluída! 🎉";
 
     const opsDone = areOperationsTracksCompleted();
@@ -250,8 +251,8 @@ export function initMatematica(ctx) {
 
     msg.textContent = getFinishedAllMessage(track, geralUnlockedNow);
 
-    if (!geralUnlockedNow) return setFinishedAllPrimaryHome(primaryBtn, primaryHint);
-    return setFinishedAllPrimaryGoGeral(primaryBtn, primaryHint);
+    if (!geralUnlockedNow) return setFinishedAllPrimaryHome(primaryBtn, primaryHint, primaryLabel);
+    return setFinishedAllPrimaryGoGeral(primaryBtn, primaryHint, primaryLabel);
   }
 
   function getFinishedAllMessage(track, geralUnlockedNow) {
@@ -260,32 +261,32 @@ export function initMatematica(ctx) {
     return `Você concluiu: ${track.title}.`;
   }
 
-  function setFinishedAllPrimaryGoGeral(primaryBtn, primaryHint) {
-    primaryBtn.textContent = "Ir para Geral";
+  function setFinishedAllPrimaryGoGeral(primaryBtn, primaryHint, primaryLabel) {
+    primaryLabel.textContent = "Ir para Geral";
     primaryHint.textContent = "desafio final";
     primaryBtn.dataset.action = "go_geral";
   }
 
-  function setFinishedAllPrimaryHome(primaryBtn, primaryHint) {
-    primaryBtn.textContent = "Voltar ao início";
+  function setFinishedAllPrimaryHome(primaryBtn, primaryHint, primaryLabel) {
+    primaryLabel.textContent = "Voltar ao início";
     primaryHint.textContent = "ver a trilha";
     primaryBtn.dataset.action = "home";
   }
 
   function renderMathPassed(ui) {
-    const { title, msg, primaryBtn, primaryHint } = ui;
+    const { title, msg, primaryBtn, primaryHint, primaryLabel } = ui;
     title.textContent = "Muito bem! ✅";
     msg.textContent = "Sessão concluída! Próxima sessão liberada.";
-    primaryBtn.textContent = "Continuar";
+    primaryLabel.textContent = "Continuar";
     primaryHint.textContent = "próxima sessão";
     primaryBtn.dataset.action = "next";
   }
 
   function renderMathFailed(ui) {
-    const { title, msg, primaryBtn, primaryHint } = ui;
+    const { title, msg, primaryBtn, primaryHint, primaryLabel } = ui;
     title.textContent = "Vamos tentar de novo 💪";
     msg.textContent = "Você não atingiu a meta. Tente novamente!";
-    primaryBtn.textContent = "Repetir sessão";
+    primaryLabel.textContent = "Repetir sessão";
     primaryHint.textContent = "treinar mais";
     primaryBtn.dataset.action = "retry";
   }

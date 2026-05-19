@@ -4,6 +4,7 @@ export function defaultPortuguesState() {
   return {
     literacy: { completedStages: [false, false, false], unlockedStage: 0, completed: false },
     spell: { completedStages: [false, false, false], unlockedStage: 0, completed: false },
+    phrase: { completedStages: [false, false, false], unlockedStage: 0, completed: false },
   };
 }
 
@@ -112,6 +113,7 @@ const LITERACY_ITEMS = [
   { emoji: "💻", word: "COMPUTADOR", difficulty: "dificil" },
   { emoji: "📺", word: "TELEVISÃO", difficulty: "dificil" },
   { emoji: "🧩", word: "QUEBRA-CABEÇA", difficulty: "dificil" },
+  { emoji: "🌈", word: "ARCO-ÍRIS", difficulty: "dificil" },
   { emoji: "🩹", word: "BORRACHA", difficulty: "dificil" },
   { emoji: "☂️", word: "GUARDA-CHUVA", difficulty: "dificil" },
   { emoji: "🧊", word: "GELADEIRA", difficulty: "dificil" },
@@ -135,6 +137,56 @@ const SPELL_STAGES = [
   { id: 2, title: "Sessão 6 • Escrita (Difícil)", minLen: 8, maxLen: 99, rounds: 10, pass: 0.75 },
 ];
 
+const PHRASE_STAGES = [
+  { id: 0, title: "Sessão 7 • Frases (Fácil)", rounds: 8, pass: 0.75 },
+  { id: 1, title: "Sessão 8 • Frases (Médio)", rounds: 10, pass: 0.75 },
+  { id: 2, title: "Sessão 9 • Frases (Difícil)", rounds: 12, pass: 0.75 },
+];
+
+const PHRASE_ITEMS = [
+  // Fácil (até 3 palavras)
+  { emoji: "❤️", word: "EU TE AMO" },
+  { emoji: "🌟", word: "VOCÊ CONSEGUE" },
+  { emoji: "🎉", word: "MUITO BEM" },
+  { emoji: "😊", word: "BOM DIA" },
+  { emoji: "🌙", word: "BOA NOITE" },
+  { emoji: "🙏", word: "POR FAVOR" },
+  { emoji: "🤝", word: "MUITO OBRIGADO" },
+  { emoji: "💛", word: "EU TE ADORO" },
+  { emoji: "👋", word: "OLÁ AMIGOS" },
+  { emoji: "🧡", word: "TE AMO" },
+  { emoji: "😄", word: "EU SOU FELIZ" },
+  { emoji: "🏫", word: "VAMOS À ESCOLA" },
+
+  // Médio (3 a 4 palavras)
+  { emoji: "👩‍👧", word: "MAMÃE QUERIDA TE AMO" },
+  { emoji: "👨‍👩‍👧", word: "EU AMO MINHA FAMÍLIA" },
+  { emoji: "🧃", word: "SUCO DE MARACUJÁ" },
+  { emoji: "🍓", word: "EU GOSTO DE MORANGO" },
+  { emoji: "⚽", word: "EU GOSTO DE FUTEBOL" },
+  { emoji: "📚", word: "EU GOSTO DE LER" },
+  { emoji: "🌈", word: "EU VI O ARCO-ÍRIS" },
+  { emoji: "🐶", word: "MEU CÃO É AMIGO" },
+  { emoji: "🐱", word: "MEU GATO DORME MUITO" },
+  { emoji: "🎵", word: "EU AMO MÚSICA" },
+  { emoji: "🍽️", word: "EU COMO COMIDA BOA" },
+  { emoji: "🧩", word: "EU FAÇO QUEBRA-CABEÇA" },
+
+  // Difícil (4 palavras)
+  { emoji: "💖", word: "EU TE AMO MUITO" },
+  { emoji: "⭐", word: "VOCÊ É MUITO ESPECIAL" },
+  { emoji: "👏", word: "PARABÉNS VOCÊ CONSEGUIU PASSAR" },
+  { emoji: "💪", word: "TENTE MAIS UMA VEZ" },
+  { emoji: "🎧", word: "EU USO FONE DE OUVIDO" },
+  { emoji: "🚲", word: "EU ANDO DE BICICLETA" },
+  { emoji: "🌻", word: "EU GOSTO DE FLORES" },
+  { emoji: "🏡", word: "EU AMO MINHA CASA" },
+  { emoji: "🐟", word: "EU VI UM PEIXE" },
+  { emoji: "🍌", word: "EU COMI UMA BANANA" },
+  { emoji: "🧠", word: "EU APRENDO TODO DIA" },
+  { emoji: "🎮", word: "EU JOGO E APRENDO" },
+];
+
 export function initPortugues(ctx) {
   const { state, saveState, showScreen, setFeedback, addPoints, speakPtBr, playCorrectSound, ensureAudioCtx, populateVoiceSelect } =
     ctx;
@@ -147,6 +199,10 @@ export function initPortugues(ctx) {
   let currentSpell = null;
   let spellLocked = false;
   let spellKeyboardReady = false;
+  let writeMode = "spell"; // "spell" | "phrase"
+
+  const phraseRun = { stageIndex: 0, roundsTotal: 0, round: 0, correct: 0, points: 0, pool: [], poolIdx: 0, lastWord: "", typed: "" };
+  let currentPhrase = null;
 
   function normalizeFirstLetter(word) {
     return word
@@ -156,13 +212,52 @@ export function initPortugues(ctx) {
       .replace(/\p{Diacritic}/gu, "")[0];
   }
 
-  function normalizeWord(word) {
-    return String(word || "")
-      .trim()
-      .toUpperCase()
+  function normalizeWriteText(text, { keepSpaces }) {
+    const raw = String(text || "").trim().toUpperCase();
+    // Preserva Ç (senão o normalize+remove diacrítico converte Ç -> C)
+    const token = "__CEDILLA__";
+    const protectedCedilla = raw.replace(/Ç/g, token);
+
+    const normalized = protectedCedilla
       .normalize("NFD")
       .replace(/\p{Diacritic}/gu, "")
-      .replace(/[^A-Z]/g, "");
+      .replaceAll(token, "Ç");
+
+    const cleaned = keepSpaces ? normalized.replace(/[^A-ZÇ ]/g, "") : normalized.replace(/[^A-ZÇ]/g, "");
+    return keepSpaces ? cleaned.replace(/\s+/g, " ").trim() : cleaned;
+  }
+
+  function normalizeDisplayText(text, { keepSpaces }) {
+    const raw = String(text || "").trim().toUpperCase();
+    const token = "__CEDILLA__";
+    const protectedCedilla = raw.replace(/Ç/g, token);
+
+    const normalized = protectedCedilla
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replaceAll(token, "Ç");
+
+    const cleaned = keepSpaces ? normalized.replace(/[^A-ZÇ \-]/g, "") : normalized.replace(/[^A-ZÇ\-]/g, "");
+    return keepSpaces ? cleaned.replace(/\s+/g, " ").trim() : cleaned;
+  }
+
+  function getActiveWrite() {
+    if (writeMode === "phrase") {
+      return {
+        stage: PHRASE_STAGES[phraseRun.stageIndex],
+        run: phraseRun,
+        current: currentPhrase,
+        setCurrent: (v) => (currentPhrase = v),
+        keepSpaces: true,
+      };
+    }
+    return {
+      stage: SPELL_STAGES[spellRun.stageIndex],
+      run: spellRun,
+      current: currentSpell,
+      setCurrent: (v) => (currentSpell = v),
+      keepSpaces: false,
+    };
   }
 
   function getNextLiteracyStageToPlay() {
@@ -223,7 +318,8 @@ export function initPortugues(ctx) {
     literacyLocked = false;
 
     $("litEmoji").textContent = currentLiteracy.emoji;
-    $("litQuestion").textContent = `Qual é a primeira letra de "${currentLiteracy.word}"?`;
+    // Esconde a palavra: o desafio é ouvir (áudio) + ver o ícone
+    $("litQuestion").textContent = "Qual é a primeira letra?";
 
     setTimeout(() => speakPtBr(currentLiteracy.word), 150);
 
@@ -258,24 +354,25 @@ export function initPortugues(ctx) {
     const msgEl = $("litResultMessage");
     const primaryBtn = $("btnLitResultPrimary");
     const primaryHint = $("litResultPrimaryHint");
-    if (!titleEl || !msgEl || !primaryBtn || !primaryHint) return;
+    const primaryLabel = $("litResultPrimaryLabel");
+    if (!titleEl || !msgEl || !primaryBtn || !primaryHint || !primaryLabel) return;
 
     if (finishedAll) {
       titleEl.textContent = "Trilha concluída! 🎉";
       msgEl.textContent = "Agora vem um novo desafio: ouvir e ESCREVER a palavra escolhendo as letras!";
-      primaryBtn.textContent = "Começar escrita";
-      primaryHint.textContent = "novo desafio";
+      primaryLabel.textContent = "Continuar";
+      primaryHint.textContent = "escrita";
       primaryBtn.dataset.action = "spell";
     } else if (passed) {
       titleEl.textContent = "Muito bem! ✅";
       msgEl.textContent = `Você passou na ${stage.title}. Próxima sessão liberada!`;
-      primaryBtn.textContent = "Continuar";
+      primaryLabel.textContent = "Continuar";
       primaryHint.textContent = "próxima sessão";
       primaryBtn.dataset.action = "next";
     } else {
       titleEl.textContent = "Vamos tentar de novo 💪";
       msgEl.textContent = `Você precisa de pelo menos ${Math.round(stage.pass * 100)}% de acertos para passar.`;
-      primaryBtn.textContent = "Repetir sessão";
+      primaryLabel.textContent = "Repetir sessão";
       primaryHint.textContent = "treinar mais";
       primaryBtn.dataset.action = "retry";
     }
@@ -352,7 +449,7 @@ export function initPortugues(ctx) {
   // ----- Escrita -----
 
   function lettersLen(word) {
-    return normalizeWord(word).length;
+    return normalizeWriteText(word, { keepSpaces: false }).length;
   }
 
   function buildSpellPoolForStage(stageIndex) {
@@ -361,6 +458,7 @@ export function initPortugues(ctx) {
       const len = lettersLen(it.word);
       return len >= stage.minLen && len <= stage.maxLen;
     });
+
     spellRun.pool = shuffle(items.length ? items : LITERACY_ITEMS);
     spellRun.poolIdx = 0;
     spellRun.lastWord = "";
@@ -369,16 +467,16 @@ export function initPortugues(ctx) {
   function nextSpellItem() {
     if (!spellRun.pool.length || spellRun.poolIdx >= spellRun.pool.length) buildSpellPoolForStage(spellRun.stageIndex);
     let item = spellRun.pool[spellRun.poolIdx++];
-    const w = normalizeWord(item?.word || "");
+    const w = normalizeWriteText(item?.word || "", { keepSpaces: false });
     if (w && w === spellRun.lastWord && spellRun.pool.length > 1) item = spellRun.pool[spellRun.poolIdx++ % spellRun.pool.length];
-    spellRun.lastWord = normalizeWord(item?.word || "");
+    spellRun.lastWord = normalizeWriteText(item?.word || "", { keepSpaces: false });
     return item;
   }
 
-  function updateSpellStageBar() {
-    const stage = SPELL_STAGES[spellRun.stageIndex];
-    $("spellStageTitle").textContent = stage.title;
-    $("spellStageProgress").textContent = `Questão ${Math.min(spellRun.round + 1, spellRun.roundsTotal)}/${spellRun.roundsTotal}`;
+  function updateWriteStageBar() {
+    const a = getActiveWrite();
+    $("spellStageTitle").textContent = a.stage.title;
+    $("spellStageProgress").textContent = `Questão ${Math.min(a.run.round + 1, a.run.roundsTotal)}/${a.run.roundsTotal}`;
   }
 
   function initSpellKeyboard() {
@@ -394,6 +492,13 @@ export function initPortugues(ctx) {
       b.dataset.key = ch;
       el.appendChild(b);
     });
+
+    const cedilla = document.createElement("button");
+    cedilla.type = "button";
+    cedilla.className = "btn key-btn";
+    cedilla.textContent = "Ç";
+    cedilla.dataset.key = "Ç";
+    el.appendChild(cedilla);
 
     const back = document.createElement("button");
     back.type = "button";
@@ -421,37 +526,59 @@ export function initPortugues(ctx) {
       if (!(target instanceof HTMLElement)) return;
       const key = target.dataset.key;
       if (!key) return;
-      onSpellKey(key);
+      onWriteKey(key);
     });
 
     spellKeyboardReady = true;
   }
 
-  function renderSpellWordBoxes() {
+  function renderWriteWordBoxes() {
     const el = $("spellWord");
-    if (!el || !currentSpell) return;
+    const a = getActiveWrite();
+    if (!el || !a.current) return;
     el.innerHTML = "";
-    for (let i = 0; i < currentSpell.target.length; i++) {
+    const display = a.current.display;
+    const typed = a.run.typed;
+    let ti = 0; // índice em typed (ignora espaços do target)
+    for (let i = 0; i < display.length; i++) {
+      const ch = display[i];
       const box = document.createElement("div");
-      box.className = "spell-box" + (spellRun.typed[i] ? " filled" : "");
-      box.textContent = spellRun.typed[i] || "";
+      if (ch === " ") {
+        box.className = "spell-box space";
+        box.textContent = "";
+      } else if (ch === "-") {
+        box.className = "spell-box hyphen";
+        box.textContent = "-";
+      } else {
+        const t = typed[ti] || "";
+        box.className = "spell-box" + (t ? " filled" : "");
+        box.textContent = t;
+        ti += 1;
+      }
       el.appendChild(box);
     }
   }
 
   function renderSpell() {
     initSpellKeyboard();
-    updateSpellStageBar();
+    writeMode = "spell";
+    updateWriteStageBar();
     spellLocked = false;
 
     const item = nextSpellItem();
-    currentSpell = { emoji: item.emoji, word: item.word, target: normalizeWord(item.word) };
+    const display = normalizeDisplayText(item.word, { keepSpaces: false });
+    currentSpell = {
+      emoji: item.emoji,
+      word: item.word,
+      display,
+      targetClean: normalizeWriteText(item.word, { keepSpaces: false }),
+    };
     spellRun.typed = "";
 
     $("spellEmoji").textContent = item.emoji || "👂";
     $("spellQuestion").textContent = "Ouça e escreva a palavra";
     setFeedback($("spellFeedback"), "", null);
-    renderSpellWordBoxes();
+    renderWriteWordBoxes();
     setTimeout(() => speakPtBr(item.word), 150);
   }
 
@@ -473,22 +600,27 @@ export function initPortugues(ctx) {
 
     if (key === "BACK") {
       spellRun.typed = spellRun.typed.slice(0, -1);
-      renderSpellWordBoxes();
+      renderWriteWordBoxes();
       return;
     }
     if (key === "CLEAR") {
       spellRun.typed = "";
-      renderSpellWordBoxes();
+      renderWriteWordBoxes();
       return;
     }
     if (key === "OK") {
       confirmSpellAnswer();
       return;
     }
-    if (spellRun.typed.length >= currentSpell.target.length) return;
-    if (!/^[A-Z]$/.test(key)) return;
+    if (spellRun.typed.length >= currentSpell.targetClean.length) return;
+    if (!/^[A-ZÇ]$/.test(key)) return;
     spellRun.typed += key;
-    renderSpellWordBoxes();
+    renderWriteWordBoxes();
+  }
+
+  function onWriteKey(key) {
+    if (writeMode === "phrase") return onPhraseKey(key);
+    return onSpellKey(key);
   }
 
   function showSpellResult({ passed, finishedAll }) {
@@ -504,23 +636,34 @@ export function initPortugues(ctx) {
     const msg = $("spellResultMessage");
     const primaryBtn = $("btnSpellResultPrimary");
     const primaryHint = $("spellResultPrimaryHint");
+    const primaryLabel = $("spellResultPrimaryLabel");
+    if (!title || !msg || !primaryBtn || !primaryHint || !primaryLabel) return;
 
     if (finishedAll) {
-      title.textContent = "Parabéns! Você concluiu tudo! 🎉";
-      msg.textContent = `Pontuação total: ${state.points}.`;
-      primaryBtn.textContent = "Voltar ao início";
-      primaryHint.textContent = "ver a trilha";
-      primaryBtn.dataset.action = "home";
+      const phrasePending = !state?.phrase?.completed;
+      if (phrasePending) {
+        title.textContent = "Muito bem! ✅";
+        msg.textContent = "Novo desafio liberado: frases simples!";
+        primaryLabel.textContent = "Continuar";
+        primaryHint.textContent = "frases";
+        primaryBtn.dataset.action = "phrase";
+      } else {
+        title.textContent = "Parabéns! Você concluiu tudo! 🎉";
+        msg.textContent = `Pontuação total: ${state.points}.`;
+        primaryLabel.textContent = "Continuar";
+        primaryHint.textContent = "início";
+        primaryBtn.dataset.action = "home";
+      }
     } else if (passed) {
       title.textContent = "Excelente! ✅";
       msg.textContent = `Você passou na ${stage.title}. Próxima sessão liberada!`;
-      primaryBtn.textContent = "Continuar";
+      primaryLabel.textContent = "Continuar";
       primaryHint.textContent = "próxima sessão";
       primaryBtn.dataset.action = "next";
     } else {
       title.textContent = "Quase lá 💪";
       msg.textContent = `Você precisa de pelo menos ${Math.round(stage.pass * 100)}% de acertos para passar.`;
-      primaryBtn.textContent = "Repetir sessão";
+      primaryLabel.textContent = "Repetir sessão";
       primaryHint.textContent = "treinar mais";
       primaryBtn.dataset.action = "retry";
     }
@@ -566,8 +709,8 @@ export function initPortugues(ctx) {
   function confirmSpellAnswer() {
     if (spellLocked || !currentSpell) return;
 
-    const target = currentSpell.target;
-    const typed = normalizeWord(spellRun.typed);
+    const target = currentSpell.targetClean;
+    const typed = normalizeWriteText(spellRun.typed, { keepSpaces: false });
 
     if (typed.length < target.length) {
       setFeedback($("spellFeedback"), "Complete a palavra antes de apertar OK.", "bad");
@@ -592,6 +735,209 @@ export function initPortugues(ctx) {
       if (spellRun.round >= spellRun.roundsTotal) finishSpellStage();
       else renderSpell();
     }, 900);
+  }
+
+  // ----- Frases (sessão separada) -----
+
+  function getNextPhraseStageToPlay() {
+    const completedStages = Array.isArray(state?.phrase?.completedStages) ? state.phrase.completedStages : [false, false, false];
+    const idx = completedStages.findIndex((x) => !x);
+    return idx === -1 ? null : idx;
+  }
+
+  function countWords(str) {
+    return String(str || "").trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  function isPhraseAllowedByStage(text, stageIndex) {
+    const wordCount = countWords(text);
+    const hasHyphen = String(text).includes("-");
+    if (stageIndex === 0) return wordCount <= 3 && !hasHyphen;
+    if (stageIndex === 1) return wordCount >= 3 && wordCount <= 4;
+    return wordCount === 4;
+  }
+
+  function buildPhrasePoolForStage(stageIndex) {
+    const items = PHRASE_ITEMS.filter((it) => isPhraseAllowedByStage(it.word, stageIndex));
+    phraseRun.pool = shuffle(items.length ? items : PHRASE_ITEMS);
+    phraseRun.poolIdx = 0;
+    phraseRun.lastWord = "";
+  }
+
+  function nextPhraseItem() {
+    if (!phraseRun.pool.length || phraseRun.poolIdx >= phraseRun.pool.length) buildPhrasePoolForStage(phraseRun.stageIndex);
+    let item = phraseRun.pool[phraseRun.poolIdx++];
+    const w = normalizeWriteText(item?.word || "", { keepSpaces: true });
+    if (w && w === phraseRun.lastWord && phraseRun.pool.length > 1) item = phraseRun.pool[phraseRun.poolIdx++ % phraseRun.pool.length];
+    phraseRun.lastWord = normalizeWriteText(item?.word || "", { keepSpaces: true });
+    return item;
+  }
+
+  function startPhraseStage(stageIndex) {
+    phraseRun.stageIndex = stageIndex;
+    phraseRun.roundsTotal = PHRASE_STAGES[stageIndex].rounds;
+    phraseRun.round = 0;
+    phraseRun.correct = 0;
+    phraseRun.points = 0;
+    buildPhrasePoolForStage(stageIndex);
+    showScreen("spell"); // reutiliza a tela de escrita
+    writeMode = "phrase";
+    populateVoiceSelect("ttsVoiceSpell");
+    renderPhrase();
+  }
+
+  function renderPhrase() {
+    initSpellKeyboard();
+    writeMode = "phrase";
+    updateWriteStageBar();
+    spellLocked = false;
+
+    const item = nextPhraseItem();
+    const display = normalizeDisplayText(item.word, { keepSpaces: true });
+    currentPhrase = {
+      emoji: item.emoji,
+      word: item.word,
+      display,
+      targetClean: normalizeWriteText(item.word, { keepSpaces: false }),
+    };
+    phraseRun.typed = "";
+
+    $("spellEmoji").textContent = item.emoji || "💬";
+    $("spellQuestion").textContent = "Ouça e escreva a frase";
+    setFeedback($("spellFeedback"), "", null);
+    renderWriteWordBoxes();
+    setTimeout(() => speakPtBr(item.word), 150);
+  }
+
+  function onPhraseKey(key) {
+    if (spellLocked || !currentPhrase) return;
+    ensureAudioCtx();
+
+    if (key === "BACK") {
+      phraseRun.typed = phraseRun.typed.slice(0, -1);
+      renderWriteWordBoxes();
+      return;
+    }
+    if (key === "CLEAR") {
+      phraseRun.typed = "";
+      renderWriteWordBoxes();
+      return;
+    }
+    if (key === "OK") {
+      confirmPhraseAnswer();
+      return;
+    }
+
+    if (phraseRun.typed.length >= currentPhrase.targetClean.length) return;
+    if (!/^[A-ZÇ]$/.test(key)) return;
+    phraseRun.typed += key;
+    renderWriteWordBoxes();
+  }
+
+  function showPhraseResult({ passed, finishedAll }) {
+    const stage = PHRASE_STAGES[phraseRun.stageIndex];
+    const total = phraseRun.roundsTotal;
+    const acc = total ? phraseRun.correct / total : 0;
+
+    $("spellResultCorrect").textContent = `${phraseRun.correct}/${total}`;
+    $("spellResultAccuracy").textContent = `${Math.round(acc * 100)}%`;
+    $("spellResultPoints").textContent = String(phraseRun.points);
+
+    const title = $("spellResultTitle");
+    const msg = $("spellResultMessage");
+    const primaryBtn = $("btnSpellResultPrimary");
+    const primaryHint = $("spellResultPrimaryHint");
+    const primaryLabel = $("spellResultPrimaryLabel");
+    if (!title || !msg || !primaryBtn || !primaryHint || !primaryLabel) return;
+
+    if (finishedAll) {
+      title.textContent = "Parabéns! 🎉";
+      msg.textContent = `Você concluiu as frases. Pontuação total: ${state.points}.`;
+      primaryLabel.textContent = "Continuar";
+      primaryHint.textContent = "início";
+      primaryBtn.dataset.action = "home";
+    } else if (passed) {
+      title.textContent = "Muito bem! ✅";
+      msg.textContent = `Você passou na ${stage.title}.`;
+      primaryLabel.textContent = "Continuar";
+      primaryHint.textContent = "próxima frase";
+      primaryBtn.dataset.action = "next_phrase";
+    } else {
+      title.textContent = "Quase lá 💪";
+      msg.textContent = `Você precisa de pelo menos ${Math.round(stage.pass * 100)}% de acertos para passar.`;
+      primaryLabel.textContent = "Repetir sessão";
+      primaryHint.textContent = "treinar mais";
+      primaryBtn.dataset.action = "retry_phrase";
+    }
+
+    showScreen("spellResult");
+  }
+
+  function finishPhraseStage() {
+    const stage = PHRASE_STAGES[phraseRun.stageIndex];
+    const acc = phraseRun.roundsTotal ? phraseRun.correct / phraseRun.roundsTotal : 0;
+    const passed = acc >= stage.pass;
+
+    if (!passed) return finishPhraseFailed();
+    return finishPhrasePassed();
+  }
+
+  function finishPhraseFailed() {
+    saveState();
+    showPhraseResult({ passed: false, finishedAll: false });
+  }
+
+  function finishPhrasePassed() {
+    state.phrase.completedStages[phraseRun.stageIndex] = true;
+    state.phrase.unlockedStage = Math.max(state.phrase.unlockedStage, phraseRun.stageIndex + 1);
+
+    const next = getNextPhraseStageToPlay();
+    if (next !== null) return finishPhrasePassedAndContinue();
+    return finishPhrasePassedAndCompleteAll();
+  }
+
+  function finishPhrasePassedAndContinue() {
+    saveState();
+    showPhraseResult({ passed: true, finishedAll: false });
+  }
+
+  function finishPhrasePassedAndCompleteAll() {
+    state.phrase.completed = true;
+    state.phrase.unlockedStage = PHRASE_STAGES.length - 1;
+    saveState();
+    showPhraseResult({ passed: true, finishedAll: true });
+  }
+
+  function confirmPhraseAnswer() {
+    if (spellLocked || !currentPhrase) return;
+
+    const target = currentPhrase.targetClean;
+    const typed = normalizeWriteText(phraseRun.typed, { keepSpaces: false });
+
+    if (typed.length < target.length) {
+      setFeedback($("spellFeedback"), "Complete a frase antes de apertar OK.", "bad");
+      return;
+    }
+
+    spellLocked = true;
+    const ok = typed === target;
+
+    if (ok) {
+      setFeedback($("spellFeedback"), "Muito bem! ✅", "ok");
+      addPoints(20);
+      phraseRun.points += 20;
+      phraseRun.correct += 1;
+      playCorrectSound();
+    } else {
+      // Mostra a frase original (com espaços e acentuação) para não ficar "colado"
+      setFeedback($("spellFeedback"), `A frase era: ${currentPhrase.word}`, "bad");
+    }
+
+    setTimeout(() => {
+      phraseRun.round += 1;
+      if (phraseRun.round >= phraseRun.roundsTotal) finishPhraseStage();
+      else renderPhrase();
+    }, ok ? 900 : 3000);
   }
 
   // ---- Home render ----
@@ -721,17 +1067,89 @@ export function initPortugues(ctx) {
     el.dataset.bound = "1";
   }
 
+  function renderPhrasePath() {
+    const el = $("phrasePath");
+    if (!el) return;
+    el.innerHTML = "";
+
+    const spellDone = !!state?.spell?.completed;
+    const next = spellDone ? getNextPhraseStageToPlay() : null;
+    const unlockedMax = spellDone ? (typeof state?.phrase?.unlockedStage === "number" ? state.phrase.unlockedStage : 0) : -1;
+
+    bindPhrasePathClick(el);
+
+    PHRASE_STAGES.forEach((stage, i) => {
+      const completed = !!state?.phrase?.completedStages?.[i];
+      const locked = !spellDone || (!completed && i > unlockedMax);
+      const current = spellDone && next !== null ? i === next : false;
+
+      const item = document.createElement("div");
+      item.className = "path-item" + (locked ? " locked" : "") + (completed ? " completed" : "") + (current ? " current" : "");
+      item.dataset.stage = String(i);
+
+      const badge = document.createElement("div");
+      badge.className = "path-badge";
+      badge.textContent = String(i + 1);
+
+      const text = document.createElement("div");
+      text.className = "path-text";
+
+      const name = document.createElement("div");
+      name.className = "path-name";
+      name.textContent = stage.title;
+
+      const status = document.createElement("div");
+      status.className = "path-status";
+      status.textContent = !spellDone
+        ? "Bloqueada (conclua escrita)"
+        : completed
+          ? "Concluída"
+          : locked
+            ? "Bloqueada"
+            : current
+              ? "Próxima"
+              : "Disponível";
+
+      text.appendChild(name);
+      text.appendChild(status);
+      item.appendChild(badge);
+      item.appendChild(text);
+      el.appendChild(item);
+    });
+  }
+
+  function bindPhrasePathClick(el) {
+    if (el.dataset.bound) return;
+    el.addEventListener("click", (ev) => {
+      const target = ev.target;
+      if (!(target instanceof HTMLElement)) return;
+      const item = target.closest(".path-item");
+      if (!item) return;
+      if (item.classList.contains("locked")) return;
+      if (!state?.spell?.completed) return;
+
+      const stageIndex = Number(item.dataset.stage);
+      if (Number.isNaN(stageIndex)) return;
+
+      startPhraseStage(stageIndex);
+    });
+    el.dataset.bound = "1";
+  }
+
   function getHomeHint() {
     const nextLit = getNextLiteracyStageToPlay();
     const nextSpell = getNextSpellStageToPlay();
+    const nextPhrase = getNextPhraseStageToPlay();
     if (nextLit !== null) return `próxima: ${LITERACY_STAGES[nextLit].title} (progressivo)`;
     if (nextSpell !== null) return `próxima: ${SPELL_STAGES[nextSpell].title} (escrita)`;
+    if (!!state?.spell?.completed && nextPhrase !== null) return `próxima: ${PHRASE_STAGES[nextPhrase].title} (frases)`;
     return "tudo concluído — clique para recomeçar";
   }
 
   function renderHome() {
     renderLiteracyPath();
     renderSpellingPath();
+    renderPhrasePath();
   }
 
   function startFromHome() {
@@ -746,6 +1164,12 @@ export function initPortugues(ctx) {
     const nextSpell = getNextSpellStageToPlay();
     if (nextSpell !== null) {
       startSpellStage(nextSpell);
+      return;
+    }
+
+    const nextPhrase = getNextPhraseStageToPlay();
+    if (!!state?.spell?.completed && nextPhrase !== null) {
+      startPhraseStage(nextPhrase);
       return;
     }
 
@@ -767,9 +1191,13 @@ export function initPortugues(ctx) {
 
   $("btnSpellSpeak")?.addEventListener("click", () => {
     ensureAudioCtx();
-    if (currentSpell?.word) speakPtBr(currentSpell.word);
+    const word = writeMode === "phrase" ? currentPhrase?.word : currentSpell?.word;
+    if (word) speakPtBr(word);
   });
-  $("btnSpellRestart")?.addEventListener("click", () => startSpellStage(spellRun.stageIndex));
+  $("btnSpellRestart")?.addEventListener("click", () => {
+    if (writeMode === "phrase") return startPhraseStage(phraseRun.stageIndex);
+    return startSpellStage(spellRun.stageIndex);
+  });
 
   $("btnLitResultHome")?.addEventListener("click", () => showScreen("home"));
   $("btnLitResultPrimary")?.addEventListener("click", () => {
@@ -800,6 +1228,18 @@ export function initPortugues(ctx) {
     }
     if (action === "next") {
       startSpellStage(getNextSpellStageToPlay() ?? 0);
+      return;
+    }
+    if (action === "phrase") {
+      startPhraseStage(getNextPhraseStageToPlay() ?? 0);
+      return;
+    }
+    if (action === "retry_phrase") {
+      startPhraseStage(phraseRun.stageIndex);
+      return;
+    }
+    if (action === "next_phrase") {
+      startPhraseStage(getNextPhraseStageToPlay() ?? 0);
       return;
     }
     showScreen("home");
